@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰術數位資訊鏈路 TADIL</title>    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --primary-green: #00ff00;
+            --dark-green: #003300;
+            --highlight-green: #39ff14;
+            --background-color: #000807;
+            --grid-color: rgba(0, 255, 0, 0.1);
+        }
+        
+        body {
+            font-family: 'Roboto Mono', monospace;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            color: var(--primary-green);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px) 0 0 / 20px 20px,
+                linear-gradient(0deg, var(--grid-color) 1px, transparent 1px) 0 0 / 20px 20px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            opacity: 0.3;
+        }
+        
+        .chat-container {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgba(0, 20, 0, 0.85);
+            border: 1px solid var(--primary-green);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+        
+        .story-container {
+            height: 65vh;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--primary-green);
+            background-color: rgba(0, 10, 0, 0.7);
+            position: relative;
+        }
+        
+        .story-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                var(--primary-green) 50%, 
+                transparent 100%);
+            animation: scanline 4s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(65vh); }
+        }
+        
+        .story-container::-webkit-scrollbar {
+            width: 6px;
+            background-color: var(--dark-green);
+        }
+        
+        .story-container::-webkit-scrollbar-thumb {
+            background-color: var(--primary-green);
+            border-radius: 0;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 12px 15px;
+            border: 1px solid var(--primary-green);
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-out;
+            position: relative;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .message::before {
+            content: '[DATA]';
+            position: absolute;
+            top: -8px;
+            left: 10px;
+            background-color: rgba(0, 10, 0, 0.9);
+            padding: 0 5px;
+            font-size: 0.8em;
+            color: var(--highlight-green);
+        }
+        
+        .user-message {
+            background-color: rgba(0, 255, 0, 0.1);
+            margin-left: auto;
+            border-left: 3px solid var(--highlight-green);
+        }
+        
+        .ai-message {
+            background-color: rgba(0, 20, 0, 0.6);
+            margin-right: auto;
+            border-right: 3px solid var(--highlight-green);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: rgba(0, 20, 0, 0.8);
+            border: 1px solid var(--primary-green);
+        }
+        
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid var(--primary-green);
+            background-color: rgba(0, 10, 0, 0.8);
+            color: var(--primary-green);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(0, 255, 0, 0.5);
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: 1px solid var(--primary-green);
+            background-color: rgba(0, 20, 0, 0.8);
+            color: var(--primary-green);
+            cursor: pointer;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        button:hover {
+            background-color: var(--primary-green);
+            color: var(--background-color);
+        }
+        
+        .send-button {
+            min-width: 100px;
+        }
+        
+        .mic-button {
+            width: 50px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mic-button.recording {
+            background-color: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="animationCanvas"></canvas>
+    <div class="chat-container">
+        <h1>戰術數位資訊鏈路 TADIL</h1>
+        <div class="story-container" id="storyContainer"></div>
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="請輸入您的問題..." onkeypress="handleKeyPress(event)">
+            <button id="micButton" class="mic-button" onclick="toggleSpeechRecognition()">
+                🎤
+            </button>
+            <button class="send-button" onclick="sendMessage()">送出</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
